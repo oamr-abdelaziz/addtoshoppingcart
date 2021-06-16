@@ -15,7 +15,7 @@ module.exports = {
 // search if product exists in products collection and add it to cart
   async addtocart(req, res) {
 
-    //request body is the code of the product and its quantity
+    //request body is the code of the product, the size and its quantity
     console.log(req.body);
    
     const {
@@ -34,14 +34,26 @@ module.exports = {
         });
       }
 
-      //Create new cart item with the product object and the quantity
-      let cartItem = new Cart({
-        product,
-        size,
-        quantity
-      });
+      //find if product is added to cart previously
+      let cartItem = await Cart.findOne({"product":product,"size":size});
 
-      //save the cart item
+      if (cartItem!=null){
+        // if it is available in cart with the same size add quantity to previous quantity
+        cartItem['quantity']=cartItem['quantity']+quantity;
+      }
+      else{
+        //if not available in cart then:-
+        //Create new cart item with the product object, its size and the quantity
+        cartItem = new Cart({
+          product,
+          size,
+          quantity
+        });
+
+      }
+
+      
+      //save or update the cart item
       await cartItem.save();
       res.status(200).send("Saved Successfully");
 
